@@ -6,7 +6,7 @@ Run:  python yt_downloader.py     (opens the browser automatically)
 Needs: Python 3.8+ ; ffmpeg (for best quality merge + mp3). yt-dlp is auto-installed.
 Use only for content you have the right to download.
 """
-import base64, glob, hmac, json, mimetypes, os, sys, tempfile, threading, uuid, shutil, webbrowser, subprocess
+import base64, errno, glob, hmac, json, mimetypes, os, sys, tempfile, threading, time, uuid, shutil, webbrowser, subprocess
 from http.server import ThreadingHTTPServer, BaseHTTPRequestHandler
 from urllib.parse import urlparse, parse_qs, quote
 
@@ -214,7 +214,15 @@ def cleanup_cancelled_job(job):
         if not inside_folder:
             raise ValueError("Refusing to delete a download file outside its destination folder.")
         if os.path.isfile(candidate) or os.path.islink(candidate):
-            os.remove(candidate)
+            for attempt in range(20):
+                try:
+                    os.remove(candidate)
+                    break
+                except OSError as e:
+                    file_is_locked = getattr(e, "winerror", None) in (32, 33) or e.errno == errno.EBUSY
+                    if not file_is_locked or attempt == 19:
+                        raise
+                    time.sleep(0.1)
 
 
 def run_job(jid, p):
