@@ -1,0 +1,11 @@
+services:
+  - type: web
+    name: video-downloader
+    runtime: docker
+    plan: free
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+    healthCheckPath: /healthz
+    envVars:
+      - key: APP_PASSWORD
+        sync: false

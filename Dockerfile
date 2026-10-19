@@ -1,0 +1,18 @@
+FROM python:3.12-slim
+
+WORKDIR /app
+
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends ffmpeg \
+    && rm -rf /var/lib/apt/lists/*
+
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
+COPY yt_downloader.py .
+
+ENV PUBLIC_MODE=1
+ENV DOWNLOAD_ROOT=/tmp/video-downloads
+ENV PORT=10000
+
+CMD ["python", "yt_downloader.py"]
